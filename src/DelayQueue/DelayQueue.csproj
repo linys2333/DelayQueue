@@ -3,12 +3,17 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>DelayQueue.Net</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>linys2333</Authors>
     <Description>
       延时队列，参考java DelayQueue实现
     </Description>
     <PackageProjectUrl>https://github.com/linys2333/DelayQueue</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
 </Project>
