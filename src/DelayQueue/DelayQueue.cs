@@ -23,6 +23,9 @@ namespace DelayQueue
         /// </summary>
         private Thread _waitThread = null;
 
+        /// <summary>
+        /// 队列当前元素数量
+        /// </summary>
         public int Count
         {
             get
@@ -34,6 +37,9 @@ namespace DelayQueue
             }
         }
 
+        /// <summary>
+        /// 队列是否为空
+        /// </summary>
         public bool IsEmpty => Count == 0;
 
         /// <summary>

@@ -1,4 +1,3 @@
-using DelayQueue.Interfaces;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -16,21 +15,21 @@ namespace DelayQueue.UnitTest
         [Test]
         public void TestDelayQueue()
         {
-            var delayQueue = new DelayQueue<TestDelayItem>();
+            var delayQueue = new DelayQueue<DelayItem<Action>>();
 
             // 输出列表
             var outputs = new Dictionary<string, DateTime>();
             outputs.Add("00", DateTime.Now);
 
             // 添加任务
-            var item1 = new TestDelayItem(5000, () => { outputs.Add("50", DateTime.Now); });
-            var item2 = new TestDelayItem(2000, () => { outputs.Add("20", DateTime.Now); });
+            var item1 = new DelayItem<Action>(TimeSpan.FromSeconds(5), () => { outputs.Add("50", DateTime.Now); });
+            var item2 = new DelayItem<Action>(TimeSpan.FromSeconds(2), () => { outputs.Add("20", DateTime.Now); });
             delayQueue.TryAdd(item1);
             delayQueue.TryAdd(item2);
             delayQueue.TryAdd(item2);
 
-            delayQueue.TryAdd(new TestDelayItem(12000, () => { outputs.Add("120", DateTime.Now); }));
-            delayQueue.TryAdd(new TestDelayItem(2000, () => { outputs.Add("21", DateTime.Now); }));
+            delayQueue.TryAdd(new DelayItem<Action>(TimeSpan.FromSeconds(12), () => { outputs.Add("120", DateTime.Now); }));
+            delayQueue.TryAdd(new DelayItem<Action>(TimeSpan.FromSeconds(2), () => { outputs.Add("21", DateTime.Now); }));
 
             Assert.AreEqual(4, delayQueue.Count);
 
@@ -39,7 +38,7 @@ namespace DelayQueue.UnitTest
             {
                 if (delayQueue.TryTake(out var task))
                 {
-                    task.DelegateTask();
+                    task.Item.Invoke();
                 }
             }
 
@@ -65,44 +64,6 @@ namespace DelayQueue.UnitTest
         private static DateTime CutOffMillisecond(DateTime dt)
         {
             return new DateTime(dt.Ticks - (dt.Ticks % TimeSpan.TicksPerSecond), dt.Kind);
-        }
-    }
-
-    public class TestDelayItem : IDelayItem
-    {
-        public readonly long TimeoutMs;
-        public readonly Action DelegateTask;
-
-        public TestDelayItem(long timeoutMs, Action delegateTask)
-        {
-            TimeoutMs = timeoutMs + GetTimestamp();
-            DelegateTask = delegateTask;
-        }
-
-        public int CompareTo(object? obj)
-        {
-            if (obj == null)
-            {
-                return 1;
-            }
-
-            if (obj is TestDelayItem value)
-            {
-                return TimeoutMs.CompareTo(value.TimeoutMs);
-            }
-
-            throw new ArgumentException($"Object is not a {nameof(TestDelayItem)}");
-        }
-
-        public TimeSpan GetDelaySpan()
-        {
-            var delayMs = Math.Max(TimeoutMs - GetTimestamp(), 0);
-            return TimeSpan.FromMilliseconds(delayMs);
-        }
-
-        private long GetTimestamp()
-        {
-            return new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
         }
     }
 }
