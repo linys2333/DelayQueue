@@ -45,4 +45,7 @@ while (delayQueue.Count > 0)
 ## 更新日志
 
 v1.0.2更新内容：  
-1、添加默认延时对象 **DelayItem** 。
+1、添加默认延时对象DelayItem。
+
+v1.0.3更新内容：  
+1、优化入队出队的校验逻辑。

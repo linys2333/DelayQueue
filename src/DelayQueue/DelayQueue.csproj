@@ -3,12 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>DelayQueue.Net</PackageId>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>linys2333</Authors>
     <Description>延时队列，参考Java DelayQueue实现。
 
 v1.0.2更新内容：
-1、添加默认延时对象DelayItem
+1、添加默认延时对象DelayItem。
+
+v1.0.3更新内容：
+1、优化入队出队的校验逻辑。
     </Description>
     <PackageProjectUrl>https://github.com/linys2333/DelayQueue</PackageProjectUrl>
   </PropertyGroup>

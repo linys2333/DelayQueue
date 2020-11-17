@@ -69,19 +69,19 @@ namespace DelayQueue
         /// 添加项
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="timeout">等待超时时间</param>
+        /// <param name="timeout">该方法执行超时时间</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
         public bool TryAdd(T item, TimeSpan timeout)
         {
-            return TryAdd(item, TimeSpan.FromMilliseconds(Timeout.Infinite), CancellationToken.None);
+            return TryAdd(item, timeout, CancellationToken.None);
         }
 
         /// <summary>
         /// 添加项
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="timeout">等待超时时间</param>
+        /// <param name="timeout">该方法执行超时时间</param>
         /// <param name="cancelToken"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
@@ -94,12 +94,7 @@ namespace DelayQueue
 
             if (IsTimeout(timeout, cancelToken))
             {
-                throw new ArgumentException("Execute timeout or cancel");
-            }
-
-            if (item.GetDelaySpan() <= TimeSpan.Zero)
-            {
-                throw new ArgumentException("Delay task timeout");
+                throw new ArgumentException("Method execute timeout or cancelled");
             }
 
             if (!Monitor.TryEnter(_lock, timeout))
@@ -109,6 +104,7 @@ namespace DelayQueue
 
             if (cancelToken.IsCancellationRequested)
             {
+                Monitor.Exit(_lock);
                 return false;
             }
 
@@ -212,10 +208,6 @@ namespace DelayQueue
                     // 当前没有项，阻塞等待
                     if (!TryPeek(out item))
                     {
-                        if (cancelToken.IsCancellationRequested)
-                        {
-                            return false;
-                        }
                         Monitor.Wait(_lock);
                         continue;
                     }
@@ -277,8 +269,9 @@ namespace DelayQueue
         /// 取出项，如果未到期，则阻塞
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="timeout">等待超时时间，注意，实际超时时间可能大于指定值</param>
+        /// <param name="timeout">该方法执行超时时间，注意，实际超时时间可能大于指定值</param>
         /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public bool TryTake(out T item, TimeSpan timeout)
         {
             return TryTake(out item, timeout, CancellationToken.None);
@@ -288,16 +281,17 @@ namespace DelayQueue
         /// 取出项，如果未到期，则阻塞
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="timeout">等待超时时间，注意，实际超时时间可能大于指定值</param>
+        /// <param name="timeout">该方法执行超时时间，注意，实际超时时间可能大于指定值</param>
         /// <param name="cancelToken"></param>
         /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public bool TryTake(out T item, TimeSpan timeout, CancellationToken cancelToken)
         {
             item = null;
 
             if (IsTimeout(timeout, cancelToken))
             {
-                return false;
+                throw new ArgumentException("Method execute timeout or cancelled");
             }
 
             if (!Monitor.TryEnter(_lock, timeout))
@@ -318,10 +312,6 @@ namespace DelayQueue
                     // 当前没有项，阻塞等待
                     if (!TryPeek(out item))
                     {
-                        if (IsTimeout(timeout, cancelToken))
-                        {
-                            return false;
-                        }
                         timeout = MonitorExt.Wait(_lock, timeout);
                         continue;
                     }
@@ -335,11 +325,6 @@ namespace DelayQueue
 
                     // 移除引用，便于GC清理
                     item = null;
-
-                    if (IsTimeout(timeout, cancelToken))
-                    {
-                        return false;
-                    }
 
                     // 如果有其它线程也在等待，则阻塞等待
                     if (timeout < delaySpan || _waitThread != null)
